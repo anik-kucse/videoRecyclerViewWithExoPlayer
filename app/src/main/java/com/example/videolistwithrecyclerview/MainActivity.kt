@@ -1,8 +1,10 @@
 package com.example.videolistwithrecyclerview
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.RequestOptions
@@ -10,7 +12,8 @@ import com.example.videolistwithrecyclerview.util.Resources
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var mRecyclerView: VideoPlayerRecyclerView
+    private lateinit var mRecyclerView: RecyclerView
+    private lateinit var mScrollListener: OnScrollListener
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,9 +30,11 @@ class MainActivity : AppCompatActivity() {
         mRecyclerView.addItemDecoration(itemDecorator)
 
         val mediaObjects = Resources.MEDIA_OBJECTS
-        mRecyclerView.setMediaObjects(mediaObjects.toList())
         val adapter = VideoPlayerRecyclerAdapter(mediaObjects.toList(), initGlide())
         mRecyclerView.adapter = adapter
+        mScrollListener = OnScrollListener(this)
+        mRecyclerView.addOnScrollListener(mScrollListener)
+        setOnItemAttachListener()
     }
 
     private fun initGlide(): RequestManager {
@@ -41,7 +46,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        mRecyclerView.releasePlayer();
+        mScrollListener.releasePlayer();
         super.onDestroy()
+    }
+
+    fun setOnItemAttachListener() {
+        mRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener{
+            override fun onChildViewDetachedFromWindow(view: View) {
+                mScrollListener.resetVideoView(view)
+            }
+
+            override fun onChildViewAttachedToWindow(view: View) {}
+        })
     }
 }
